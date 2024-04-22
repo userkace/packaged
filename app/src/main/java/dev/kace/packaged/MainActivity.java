@@ -1,12 +1,18 @@
 package dev.kace.packaged;
 
+import static dev.kace.packaged.AppPackageListGetter.getAllInstalledApps;
+
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -26,14 +32,26 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private ListView listView;
-    private FloatingActionButton addButton;
-    private ListView selectView;
+    private static final int REQUEST_CODE_PERMISSION_QUERY_PACKAGES = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.QUERY_ALL_PACKAGES)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted, request it
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.QUERY_ALL_PACKAGES},
+                    REQUEST_CODE_PERMISSION_QUERY_PACKAGES);
+        } else {
+            // Permission already granted, proceed with getting installed apps
+            List<AppPackageListGetter.AppInfo> installedApps = getAllInstalledApps(getApplicationContext());
+            // Now you can use the installedApps list
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -45,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Get all installed apps
-        List<AppPackageListGetter.AppInfo> installedApps = AppPackageListGetter.getAllInstalledApps(this);
+        List<AppPackageListGetter.AppInfo> installedApps = getAllInstalledApps(this);
 
         // Create custom adapter to display app name, package name, and icon
         AppListAdapter adapter = new AppListAdapter(this, installedApps);
@@ -73,12 +91,15 @@ public class MainActivity extends AppCompatActivity {
                 openWebsite("https://www.github.com/userkace/packaged");
             }
         });
+
     }
+
 
     private void openWebsite(String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(intent);
     }
+
 
     private void openAppSettings(String packageName) {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
