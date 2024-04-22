@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Open a website when the button is clicked
-                openWebsite("https://www.github.com/userkace");
+                openWebsite("https://www.github.com/userkace/packaged");
             }
         });
     }
