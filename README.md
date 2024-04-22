@@ -1,2 +1,7 @@
 # packaged
- an android package viewer
+ an android application package viewer
+
+## technologies
+- gradle
+- java
+- android studio
