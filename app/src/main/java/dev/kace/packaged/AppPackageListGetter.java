@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -55,7 +56,8 @@ public class AppPackageListGetter {
     public static List<AppInfo> getAllInstalledApps(Context context) {
         List<AppInfo> apps = new ArrayList<>();
         PackageManager packageManager = context.getPackageManager();
-        List<ApplicationInfo> appList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        List<ApplicationInfo> appList = packageManager.getInstalledApplications(
+                PackageManager.MATCH_ALL);
 
         for (ApplicationInfo appInfo : appList) {
             String packageName = appInfo.packageName;
@@ -65,7 +67,7 @@ public class AppPackageListGetter {
             apps.add(app);
         }
 
-        // Sort the list by label name
+        // Sort the list alphabetically by app name
         Collections.sort(apps, new Comparator<AppInfo>() {
             @Override
             public int compare(AppInfo app1, AppInfo app2) {
@@ -74,85 +76,5 @@ public class AppPackageListGetter {
         });
 
         return apps;
-    }
-
-    public static class MainActivity extends AppCompatActivity {
-        private ListView listView;
-        private FloatingActionButton addButton;
-        private ArrayAdapter<AppInfo> selectAdapter;
-        public static List<AppInfo> selectedApps;
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            EdgeToEdge.enable(this);
-            setContentView(R.layout.activity_main);
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-                return insets;
-            });
-
-            listView = findViewById(R.id.list_view);
-
-            // Get all installed apps
-            List<AppInfo> installedApps = getAllInstalledApps(this);
-
-            // Create custom adapter to display app name, package name, and icon
-            AppListAdapter adapter = new AppListAdapter(this, installedApps);
-
-            // Set the adapter to the ListView
-            listView.setAdapter(adapter);
-
-            // Handle click event of list items in app_list_item.xml
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    // Get selected app
-                    AppPackageListGetter.AppInfo selectedApp = (AppPackageListGetter.AppInfo) parent.getItemAtPosition(position);
-
-                    // Open settings for the selected app
-                    openAppSettings(selectedApp.getPackageName());
-                }
-            });
-
-        }
-
-        private void openAppSettings(String packageName) {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + packageName));
-            startActivity(intent);
-        }
-
-        private class AppListAdapter extends ArrayAdapter<AppInfo> {
-
-            public AppListAdapter(Context context, List<AppInfo> apps) {
-                super(context, R.layout.app_list_item, apps);
-            }
-
-            @Override
-            public View getView(int position, View convertView, android.view.ViewGroup parent) {
-                View itemView = convertView;
-                if (itemView == null) {
-                    itemView = getLayoutInflater().inflate(R.layout.app_list_item, parent, false);
-                }
-
-                AppPackageListGetter.AppInfo currentApp = getItem(position);
-
-                // Set app name
-                android.widget.TextView appNameTextView = itemView.findViewById(R.id.app_name);
-                appNameTextView.setText(currentApp.getAppName());
-
-                // Set package name
-                android.widget.TextView packageNameTextView = itemView.findViewById(R.id.package_name);
-                packageNameTextView.setText(currentApp.getPackageName());
-
-                // Set app icon
-                android.widget.ImageView appIconImageView = itemView.findViewById(R.id.app_icon);
-                appIconImageView.setImageDrawable(currentApp.getAppIcon());
-
-                return itemView;
-            }
-        }
     }
 }
