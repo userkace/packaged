@@ -5,3 +5,6 @@
 - gradle
 - java
 - android studio
+
+## requirements
+- android 12 (sdk 31)
